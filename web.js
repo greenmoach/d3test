@@ -19,7 +19,6 @@ var yearlyBubbleChart = dc.bubbleChart('#yearly-bubble-chart');
 var nasdaqCount = dc.dataCount('.dc-data-count');
 var nasdaqTable = dc.dataTable('.dc-data-table');
 
-var compositeChart1 = dc.compositeChart("#monthly-composite-chart");
 // ### Anchor Div for Charts
 /*
  // A div anchor that can be identified by id
@@ -554,25 +553,6 @@ d3.csv('content/ndx.csv', function (data) {
             table.selectAll('.dc-table-group').classed('info', true);
         });
 
-
-    // compose the given charts in the array into one single composite chart
-    compositeChart1.compose([
-        // when creating sub-chart you need to pass in the parent chart
-        dc.lineChart(moveChart)
-            .group(indexAvgByMonthGroup) // if group is missing then parent's group will be used
-            .valueAccessor(function(d){return d.value.avg;})
-            // most of the normal functions will continue to work in a composed chart
-            .renderArea(true)
-            .stack(monthlyMoveGroup, function(d){return d.value;})
-            .title(function(d){
-                var value = d.value.avg?d.value.avg:d.value;
-                if(isNaN(value)) value = 0;
-                return dateFormat(d.key) + "\n" + numberFormat(value);
-            }),
-        dc.barChart(moveChart)
-            .group(volumeByMonthGroup)
-            .centerBar(true)
-    ]);
 
     /*
      //#### Geo Choropleth Chart

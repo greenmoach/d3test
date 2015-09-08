@@ -8,20 +8,21 @@
 <body>
 
 <div id="quarter-chart">
-    <strong>Quarters</strong>
+    <strong>季統計進出站人次</strong>
     <a class="reset" href="javascript:quarterChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
 
     <div class="clearfix"></div>
 </div>
 
 <div id="month-chart">
-    <strong>Quarters</strong>
+    <strong>月統計進出站人次</strong>
     <a class="reset" href="javascript:monthChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
 
     <div class="clearfix"></div>
 </div>
 
-<div class="row">
+
+<div class="row" style="display: none;">
     <div id="monthly-move-chart">
         <strong>Monthly Index Abs Move & Volume/500,000 Chart</strong>
         <span class="reset" style="display: none;">range: <span class="filter"></span></span>
@@ -32,19 +33,18 @@
     </div>
 </div>
 
-<div class="row">
-    <div id="monthly-volume-chart">
-    </div>
-    <p class="muted pull-right" style="margin-right: 15px;">select a time range to zoom in</p>
-</div>
+
 
 
 <div class="row">
     <div id="inout-line-chart">
     </div>
-    <p class="muted pull-right" style="margin-right: 15px;">select a time range to zoom in</p>
 </div>
 
+<div class="row">
+    <div id="monthly-volume-chart">
+    </div>
+</div>
 
 <script src="colorbrewer.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>

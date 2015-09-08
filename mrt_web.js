@@ -5,6 +5,7 @@
 
 var quarterChart = dc.pieChart('#quarter-chart');
 var monthChart = dc.pieChart('#month-chart');
+
 var moveChart = dc.lineChart('#monthly-move-chart');
 var volumeChart = dc.barChart('#monthly-volume-chart');
 
@@ -44,17 +45,19 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         }
     });
     var quarterGroup = quarter.group().reduceSum(function (d) {
-        return d.out;
+        return d.in + d.out;
     });
+
 
     var month = ndx.dimension(function (d) {
         var month = d.dd.getMonth();
-        return month;
+        return (month + 1) + '月';
     });
 
     var monthGroup = month.group().reduceSum(function (d) {
-        return d.out;
+        return d.in + d.out;
     });
+
 
 
     // Dimension by month
@@ -133,28 +136,31 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
             return d.value;
         });
 
-    inoutChar.x(d3.time.scale().domain([new Date(2000, 0, 1), new Date(2015, 11, 31)]));
-
-    inChart /* dc.lineChart('#monthly-move-chart', 'chartGroup') */
-        .renderArea(true)
+    inoutChar
         .width(990)
         .height(200)
-        .transitionDuration(1000)
-        .margins({top: 30, right: 50, bottom: 25, left: 40})
-        .dimension(moveMonths)
-        .mouseZoomable(true)
-        // Specify a "range chart" to link its brush extent with the zoom of the current "focus chart".
         .rangeChart(volumeChart)
+        .yAxisLabel("The Y Axis")
+        .legend(dc.legend().x(80).y(20).itemHeight(13).gap(5))
+        .renderHorizontalGridLines(true)
         .x(d3.time.scale().domain([new Date(2000, 0, 1), new Date(2015, 11, 31)]))
         .round(d3.time.month.round)
         .xUnits(d3.time.months)
+        .brushOn(false)
         .elasticY(true)
         .renderHorizontalGridLines(true)
-        //##### Legend
+        .compose([inChart, outChart])
 
+    inChart /* dc.lineChart('#monthly-move-chart', 'chartGroup') */
+        .renderArea(true)
+        .transitionDuration(1000)
+        .dimension(moveMonths)
+        // Specify a "range chart" to link its brush extent with the zoom of the current "focus chart".
+
+        //##### Legend
+        .colors('red')
         // Position the legend relative to the chart origin and specify items' height and separation.
         .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
-        .brushOn(false)
         // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
         // legend.
         // The `.valueAccessor` will be used for the base layer
@@ -169,24 +175,13 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
 
     outChart /* dc.lineChart('#monthly-move-chart', 'chartGroup') */
         .renderArea(true)
-        .width(990)
-        .height(200)
         .transitionDuration(1000)
-        .margins({top: 30, right: 50, bottom: 25, left: 40})
         .dimension(moveMonths)
-        .mouseZoomable(true)
         // Specify a "range chart" to link its brush extent with the zoom of the current "focus chart".
-        .rangeChart(volumeChart)
-        .x(d3.time.scale().domain([new Date(2000, 0, 1), new Date(2015, 11, 31)]))
-        .round(d3.time.month.round)
-        .xUnits(d3.time.months)
-        .elasticY(true)
-        .renderHorizontalGridLines(true)
         //##### Legend
-
+        .colors('blue')
         // Position the legend relative to the chart origin and specify items' height and separation.
         .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
-        .brushOn(false)
         // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
         // legend.
         // The `.valueAccessor` will be used for the base layer
