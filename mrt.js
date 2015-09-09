@@ -3,6 +3,7 @@
  */
 'use strict';
 
+var yearChart = dc.rowChart('#year-chart');
 var quarterChart = dc.pieChart('#quarter-chart');
 var monthChart = dc.pieChart('#month-chart');
 
@@ -31,6 +32,14 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
     var ndx = crossfilter(data);
     var all = ndx.groupAll();
 
+
+    var year = ndx.dimension(function (d) {
+        var year = d.dd.getFullYear();
+        return year;
+    });
+    var yearGroup = year.group().reduceSum(function (d) {
+        return d.in + d.out;
+    });;
 
     var quarter = ndx.dimension(function (d) {
         var month = d.dd.getMonth();
@@ -78,6 +87,37 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         return d.in;
     });
 
+
+    //yearChart.width(500) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
+    //    .height(180)
+    //    .margins({top: 20, right: 50, bottom: 20, left: 80})
+    //    .dimension(year)
+    //    .group(yearGroup)
+    //    .centerBar(true)
+    //    .gap(1)
+    //    .x(d3.time.scale().domain([new Date(2000, 0, 1), new Date(2015, 11, 31)]))
+    //    .round(d3.time.year.round)
+    //    .alwaysUseRounding(true)
+    //    .xUnits(d3.time.years);
+
+    yearChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
+        .width(380)
+        .height(280)
+        .margins({top: 20, left: 10, right: 10, bottom: 20})
+        .group(yearGroup)
+        .dimension(year)
+        // Assign colors to each value in the x scale domain
+        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+        .label(function (d) {
+            return d.key;
+        })
+        // Title sets the row text
+        .title(function (d) {
+            return d.value;
+        })
+        .elasticX(true)
+        .xAxis().ticks(4);
+
     quarterChart /* dc.pieChart('#quarter-chart', 'chartGroup') */
         .width(180)
         .height(180)
@@ -86,7 +126,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         .dimension(quarter)
         .group(quarterGroup);
 
-    monthChart /* dc.pieChart('#quarter-chart', 'chartGroup') */
+    monthChart /* dc.pieChart('#month-chart', 'chartGroup') */
         .width(180)
         .height(180)
         .radius(80)
@@ -140,8 +180,9 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         .width(990)
         .height(200)
         .rangeChart(volumeChart)
-        .yAxisLabel("The Y Axis")
-        .legend(dc.legend().x(80).y(20).itemHeight(13).gap(5))
+        .yAxisLabel("人次")
+        .margins({top: 30, right: 50, bottom: 25, left: 80})
+        .legend(dc.legend().x(100).y(20).itemHeight(13).gap(5))
         .renderHorizontalGridLines(true)
         .x(d3.time.scale().domain([new Date(2000, 0, 1), new Date(2015, 11, 31)]))
         .round(d3.time.month.round)
@@ -164,7 +205,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
         // legend.
         // The `.valueAccessor` will be used for the base layer
-        .group(indexAvgByMonthGroup, 'Monthly Index Average')
+        .group(indexAvgByMonthGroup, '捷運站進站人次')
         .valueAccessor(function (d) {
             return d.value;
         })
@@ -185,7 +226,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
         // legend.
         // The `.valueAccessor` will be used for the base layer
-        .group(monthlyMoveGroup, 'Monthly Index Average')
+        .group(monthlyMoveGroup, '捷運站出站人次')
         .valueAccessor(function (d) {
             return d.value;
         })
@@ -202,7 +243,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
     // will always match the zoom of the area chart.
     volumeChart.width(990) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
         .height(40)
-        .margins({top: 0, right: 50, bottom: 20, left: 40})
+        .margins({top: 0, right: 50, bottom: 20, left: 80})
         .dimension(moveMonths)
         .group(volumeByMonthGroup)
         .centerBar(true)
