@@ -39,7 +39,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
     });
     var yearGroup = year.group().reduceSum(function (d) {
         return d.in + d.out;
-    });;
+    });
 
     var quarter = ndx.dimension(function (d) {
         var month = d.dd.getMonth();

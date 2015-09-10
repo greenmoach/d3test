@@ -6,10 +6,33 @@
     <title></title>
 </head>
 <body>
-<div class="row">
-    <div id="year-volume-chart">
+
+
+    <div id="year-chart">
+        <strong>年統計進出站人次</strong>
+        <a class="reset" href="javascript:yearChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
     </div>
-</div>
+
+    <div id="month-chart">
+        <strong>月統計進出站人次</strong>
+        <a class="reset" href="javascript:monthChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
+    </div>
+
+
+
+    <div class="row">
+        <strong>沿線各站進出站人次</strong>
+        <div id="year-volume-chart">
+        </div>
+    </div>
+
+
+
+
 
 <script src="colorbrewer.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
