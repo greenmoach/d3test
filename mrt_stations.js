@@ -56,7 +56,7 @@ d3.csv('content/MRTBannanLine.csv', function (data) {
 
     volumeChart.width(1090) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
         .height(240)
-        .margins({top: 40, right: 50, bottom: 20, left: 80})
+        .margins({top: 40, right: 50, bottom: 20, left: 100})
         .dimension(volumeOfStation)
         .group(volumeOfInStationGroup, "進站人次")
         .centerBar(false)
@@ -76,7 +76,7 @@ d3.csv('content/MRTBannanLine.csv', function (data) {
 
 
     yearChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
-        .width(380)
+        .width(750)
         .height(280)
         .margins({top: 20, left: 10, right: 10, bottom: 20})
         .group(yearGroup)
