@@ -101,7 +101,7 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
     //    .xUnits(d3.time.years);
 
     yearChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
-        .width(380)
+        .width(500)
         .height(280)
         .margins({top: 20, left: 10, right: 10, bottom: 20})
         .group(yearGroup)
@@ -119,16 +119,16 @@ d3.csv('content/mrtSingleStation.csv', function (data) {
         .xAxis().ticks(4);
 
     quarterChart /* dc.pieChart('#quarter-chart', 'chartGroup') */
-        .width(180)
-        .height(180)
+        .width(280)
+        .height(280)
         .radius(80)
         .innerRadius(30)
         .dimension(quarter)
         .group(quarterGroup);
 
     monthChart /* dc.pieChart('#month-chart', 'chartGroup') */
-        .width(180)
-        .height(180)
+        .width(280)
+        .height(280)
         .radius(80)
         .innerRadius(30)
         .dimension(month)
