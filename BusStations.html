@@ -19,18 +19,22 @@
 <script type="text/javascript">
 
     var map;
+    var busStations;
+    var markers = [];
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: 24.9624983, lng: 121.5427091},
             zoom: 8
         });
+        dataProcess();
     }
 
 
-    $(function(){
+    function dataProcess() {
         $.getJSON( "content/BusStops5284.json", function( data ) {
-             coords = _.map(data, function(item){
-                return {lat: item.showLat, lon:item.showLon};
+            busStations = _.filter(data, function(item){ return item.seqNo == "1" && item.routeId == "16750";});
+             coords = _.map(busStations, function(item){
+                return _.pick(item,'showLat','showLon');
             });
             console.log(coords.length);
              uniqCoords = _.uniq(coords, false, function(item){return JSON.stringify(item);});
@@ -38,15 +42,22 @@
 
             _.each(uniqCoords, function(item){
                 var marker = new google.maps.Marker({
-                    position: {lat: parseFloat(item.lat), lng: parseFloat(item.lon)} ,
+                    position: {lat: parseFloat(item.showLat), lng: parseFloat(item.showLon)} ,
                     icon: "icon-bus.png",
-                    map: map
+                    map: map,
+                    id: item.Id
+                });
+                markers.push(marker);
+                console.log(marker.id);
+                marker.addListener('click', function(event) {
+                    console.log(marker.id);
+
                 });
 
             });
         });
 
-    });
+    };
 
 </script>
 </body>
