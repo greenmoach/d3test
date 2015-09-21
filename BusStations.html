@@ -49,7 +49,11 @@
             center: {lat: 24.9624983, lng: 121.5427091},
             zoom: 8
         });
-        dataProcess();
+        //dataProcess();
+
+        var p1 = new google.maps.LatLng(25.0315428,121.5198605);
+        var p2 = new google.maps.LatLng(25.0301041,121.5288727);
+        drawCurvePolyline(p1,p2);
     }
 
 
@@ -125,6 +129,59 @@
                 map: map
             });
             crossMarkers.push(marker);
+
+        });
+    }
+
+    // https://developers.google.com/maps/documentation/javascript/symbols
+    function drawCurvePolyline(p1,p2)
+    {
+        var bounds = new google.maps.LatLngBounds();
+        bounds.extend(p1);
+        bounds.extend(p2);
+        map.fitBounds(bounds);
+        var markerP1 = new google.maps.Marker({
+            position: p1,
+            map: map
+        });
+        var markerP2 = new google.maps.Marker({
+            position: p2,
+            map: map
+        });
+        google.maps.event.addListener(map, 'projection_changed', function () {
+            var p1 = map.getProjection().fromLatLngToPoint(markerP1.getPosition());
+            var p2 = map.getProjection().fromLatLngToPoint(markerP2.getPosition());
+            var e = new google.maps.Point(p1.x - p2.x, p1.y - p2.y);
+            var m = new google.maps.Point(e.x / 2, e.y / 2);
+            var o = new google.maps.Point(0, 7);
+            var c = new google.maps.Point(m.x + o.x, m.y + o.y);
+            var curveMarker2 = new google.maps.Marker({
+                position: markerP1.getPosition(),
+                icon: {
+                    path: "M 0 0 q " + c.x + " " + c.y + " " + e.x + " " + e.y,
+                    scale: 24,
+                    strokeWeight: 2,
+                    fillColor: '#009933',
+                    fillOpacity: 0,
+                    rotation: 180,
+                    anchor: new google.maps.Point(0, 0)
+                }
+            });
+            curveMarker2.setMap(map);
+            google.maps.event.addListener(map, 'zoom_changed', function () {
+                var zoom = map.getZoom();
+                var scale = 1 / (Math.pow(2, -zoom));
+                var icon = {
+                    path: "M 0 0 q " + c.x + " " + c.y + " " + e.x + " " + e.y,
+                    scale: scale,
+                    strokeWeight: 2,
+                    fillColor: '#009933',
+                    fillOpacity: 0,
+                    rotation: 180,
+                    anchor: new google.maps.Point(0, 0)
+                };
+                curveMarker2.setIcon(icon);
+            });
 
         });
     }
