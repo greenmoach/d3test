@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        html, body { height: 100%; margin: 0; padding: 0; }
+        #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="infoArea" style="display: none;">
+    <h2>公車資訊</h2>
+    <div>
+        <span>經過的路線數目：</span><span id="routeNum"></span>
+    </div>
+    <div>
+        <span>站牌名稱：</span><span id="stopName"></span>
+    </div>
+    <div><button id="renew">返回</button></div>
+</div>
+<div id="map"></div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="jss/underscore.js"></script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIWfo_7x1UMeF4CroWV5oVc6VxCcfsVeI&callback=initMap">
+</script>
+<script type="text/javascript">
+
+    var map;
+    var busStations;
+    var markers = [];
+    var crossMarkers = [];
+
+    $(function(){
+        $('#renew').click(function(){
+            $('#infoArea').slideUp();
+            $('#routeNum').text('');
+            $('#stopName').text('');
+            deleteCrossStops();
+            showAllParkers();
+        });
+
+    });
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 24.9624983, lng: 121.5427091},
+            zoom: 8,
+            styles: maps_style
+        });
+        dataProcess();
+
+//        var p1 = new google.maps.LatLng(25.0315428,121.5198605);
+//        var p2 = new google.maps.LatLng(25.0301041,121.5288727);
+//        drawCurvePolyline(p1,p2);
+    }
+
+
+    function dataProcess() {
+        $.getJSON( "content/BusStops5284.json", function( data ) {
+            busStations = data;
+
+            groupData = _.groupBy(data, function(item){ return item.showLat + ' '+ item.showLon;})
+
+            var objKeys = Object.keys(groupData);
+            var i = 1;
+            groupDataModels = _.map(objKeys, function(item){
+                var coords = item.split(" ");
+
+                return { id : i++, lat : coords[0], lng : coords[1], items : groupData[item]};
+
+            });
+
+            _.each(groupDataModels, function(item){
+                var marker = new google.maps.Marker({
+                    position: {lat: parseFloat(item.lat), lng: parseFloat(item.lng)} ,
+                    icon: "icon-bus.png",
+                    map: map,
+                    id: item.id
+                });
+                markers.push(marker);
+                marker.addListener('click', function(event) {
+                    var obj = _.where(groupDataModels, {id:marker.id});
+                    var routeIds = _.map(obj[0].items, function(item){return item.routeId});
+                    var nameOfStops = _.uniq(_.map(obj[0].items, function(item){return item.nameZh}));
+
+                    $('#routeNum').text(routeIds.length);
+                    $('#stopName').text(nameOfStops);
+
+                    $('#infoArea').slideDown();
+
+                    hideAllParkers();
+
+
+                    linkRoute(routeIds);
+                    //markCrossStops(routeIds, obj[0].lat, obj[0].lng);
+                    //drawRadiation(routeIds, obj[0].lat, obj[0].lng);
+
+
+                });
+
+            });
+        });
+
+    };
+
+    function linkRoute(routeIds)
+    {
+        _.each(routeIds, function(id){
+            var gostopsofroute = _.filter(busStations, function(item){
+                return id == item.routeId && '0' == item.goBack;
+            });
+            var backstopsofroute = _.filter(busStations, function(item){
+                return id == item.routeId && '1' == item.goBack;
+            });
+
+            var sortedgostopsofroute = _.sortBy(gostopsofroute, 'seqNo');
+            var sortedbackstopsofroute = _.sortBy(backstopsofroute, 'seqNo');
+
+
+            var linegoPath = _.map(sortedgostopsofroute, function(stop){
+                return {lat: parseFloat(stop.showLat), lng: parseFloat(stop.showLon)};
+            });
+            var linebackPath = _.map(sortedbackstopsofroute, function(stop){
+                return {lat: parseFloat(stop.showLat), lng: parseFloat(stop.showLon)};
+            });
+            var lineSymbol = {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 3,
+                strokeColor: '#393'
+            };
+            var line = new google.maps.Polyline({
+                path: linebackPath,
+                icons: [{
+                    icon: lineSymbol,
+                    offset: '100%'
+                }],
+                strokeColor: "#00FFFF",
+                strokeOpacity: .8,
+                strokeWeight: 4,
+                map: map
+            });
+
+            animateCircle(line);
+
+
+            crossMarkers.push(line);
+        })
+    }
+
+    function markCrossStops(routeIds, centerStopLat, centerStopLng)
+    {
+
+        var crossStops = _.filter(busStations, function(item){
+            return _.contains(routeIds, item.routeId);
+        });
+        var pinIcon = new google.maps.MarkerImage(
+                "icon-bus.png",
+                null, /* size is determined at runtime */
+                null, /* origin is 0,0 */
+                null, /* anchor is bottom center of the scaled image */
+                new google.maps.Size(32, 32)
+        );
+
+        var marker = new google.maps.Marker({
+            position: {lat: parseFloat(centerStopLat), lng: parseFloat(centerStopLng)} ,
+            icon: pinIcon,
+            map: map
+        });
+        crossMarkers.push(marker);
+
+        coords = _.map(crossStops, function(item){
+            return _.pick(item,'showLat','showLon');
+        });
+        uniqCoords = _.uniq(coords, false, function(item){return JSON.stringify(item);});
+        _.each(uniqCoords, function(item){
+            var marker = new google.maps.Marker({
+                position: {lat: parseFloat(item.showLat), lng: parseFloat(item.showLon)} ,
+                icon: "icon-bus.png",
+                map: map
+            });
+
+
+            crossMarkers.push(marker);
+
+        });
+    }
+
+
+    function drawRadiation(routeIds, centerStopLat, centerStopLng)
+    {
+        var crossStops = _.filter(busStations, function(item){
+            return _.contains(routeIds, item.routeId);
+        });
+        var pinIcon = new google.maps.MarkerImage(
+                "icon-bus.png",
+                null, /* size is determined at runtime */
+                null, /* origin is 0,0 */
+                null, /* anchor is bottom center of the scaled image */
+                new google.maps.Size(32, 32)
+        );
+
+        var marker = new google.maps.Marker({
+            position: {lat: parseFloat(centerStopLat), lng: parseFloat(centerStopLng)} ,
+            icon: pinIcon,
+            map: map
+        });
+        crossMarkers.push(marker);
+
+        coords = _.map(crossStops, function(item){
+            return _.pick(item,'showLat','showLon');
+        });
+        uniqCoords = _.uniq(coords, false, function(item){return JSON.stringify(item);});
+        _.each(uniqCoords, function(item){
+            var lineSymbol = {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 3,
+                strokeColor: '#393'
+            };
+
+            // Create the polyline and add the symbol to it via the 'icons' property.
+            var line = new google.maps.Polyline({
+                path: [{lat: parseFloat(centerStopLat), lng: parseFloat(centerStopLng)}, {lat: parseFloat(item.showLat), lng: parseFloat(item.showLon)}],
+                icons: [{
+                    icon: lineSymbol,
+                    offset: '100%'
+                }],
+                strokeColor: "#FF0000",
+                strokeOpacity: .3,
+                strokeWeight: 2,
+                map: map
+            });
+
+            animateCircle(line);
+
+
+            crossMarkers.push(line);
+
+        });
+    }
+
+    // Use the DOM setInterval() function to change the offset of the symbol
+    // at fixed intervals.
+    function animateCircle(line) {
+        var count = 0;
+        window.setInterval(function() {
+            count = (count + 1) % 200;
+
+            var icons = line.get('icons');
+            icons[0].offset = (count / 2) + '%';
+            line.set('icons', icons);
+        }, 20);
+    }
+
+    // https://developers.google.com/maps/documentation/javascript/symbols
+    function drawCurvePolyline(p1,p2)
+    {
+        var bounds = new google.maps.LatLngBounds();
+        bounds.extend(p1);
+        bounds.extend(p2);
+        map.fitBounds(bounds);
+        var markerP1 = new google.maps.Marker({
+            position: p1,
+            map: map
+        });
+        var markerP2 = new google.maps.Marker({
+            position: p2,
+            map: map
+        });
+        google.maps.event.addListener(map, 'projection_changed', function () {
+            var p1 = map.getProjection().fromLatLngToPoint(markerP1.getPosition());
+            var p2 = map.getProjection().fromLatLngToPoint(markerP2.getPosition());
+            var e = new google.maps.Point(p1.x - p2.x, p1.y - p2.y);
+            var m = new google.maps.Point(e.x / 2, e.y / 2);
+            var o = new google.maps.Point(0, 7);
+            var c = new google.maps.Point(m.x + o.x, m.y + o.y);
+            var curveMarker2 = new google.maps.Marker({
+                position: markerP1.getPosition(),
+                icon: {
+                    path: "M 0 0 q " + c.x + " " + c.y + " " + e.x + " " + e.y,
+                    scale: 24,
+                    strokeWeight: 2,
+                    fillColor: '#009933',
+                    fillOpacity: 0,
+                    rotation: 180,
+                    anchor: new google.maps.Point(0, 0)
+                }
+            });
+            curveMarker2.setMap(map);
+            google.maps.event.addListener(map, 'zoom_changed', function () {
+                var zoom = map.getZoom();
+                var scale = 1 / (Math.pow(2, -zoom));
+                var icon = {
+                    path: "M 0 0 q " + c.x + " " + c.y + " " + e.x + " " + e.y,
+                    scale: scale,
+                    strokeWeight: 2,
+                    fillColor: '#009933',
+                    fillOpacity: 0,
+                    rotation: 180,
+                    anchor: new google.maps.Point(0, 0)
+                };
+                curveMarker2.setIcon(icon);
+            });
+
+        });
+    }
+
+    function deleteCrossStops()
+    {
+        _.each(crossMarkers, function(item){
+            item.setMap(null);
+        });
+
+        crossMarkers = [];
+    }
+
+    function hideAllParkers() {
+        _.each(markers, function(item){
+            item.setMap(null);
+        });
+    }
+
+    function showAllParkers() {
+        _.each(markers, function(item){
+            item.setMap(map);
+        });
+    }
+
+    var maps_style =[
+        {
+            "featureType": "water",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 17
+                }
+            ]
+        },
+        {
+            "featureType": "landscape",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 20
+                }
+            ]
+        },
+        {
+            "featureType": "road.highway",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 17
+                }
+            ]
+        },
+        {
+            "featureType": "road.highway",
+            "elementType": "geometry.stroke",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "weight": 0.2
+                },
+                {
+                    "lightness": 29
+                }
+            ]
+        },
+        {
+            "featureType": "road.arterial",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 18
+                }
+            ]
+        },
+        {
+            "featureType": "road.local",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 16
+                }
+            ]
+        },
+        {
+            "featureType": "poi",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 21
+                }
+            ]
+        },
+        {
+            "featureType": "all",
+            "elementType": "labels.text.stroke",
+            "stylers": [
+                {
+                    "visibility": "on"
+                },
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 16
+                }
+            ]
+        },
+        {
+            "featureType": "all",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 40
+                }
+            ]
+        },
+        {
+            "featureType": "all",
+            "elementType": "labels.icon",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "transit",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 19
+                }
+            ]
+        },
+        {
+            "featureType": "administrative",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "lightness": 20
+                }
+            ]
+        },
+        {
+            "featureType": "administrative",
+            "elementType": "geometry.stroke",
+            "stylers": [
+                {
+                    "color": "#000000"
+                },
+                {
+                    "weight": 1.2
+                },
+                {
+                    "lightness": 17
+                }
+            ]
+        }
+    ];
+
+</script>
+</body>
+</html>

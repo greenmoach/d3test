@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ERROR</title>
+</head>
+<body>
+<style>
+    .error-section {
+        text-align:center;
+        padding-top:150px;
+    }
+    .text-error {
+        font-family: 'Frijole', cursive;
+        color: darkred;
+        font-size:6em;
+        font-weight: 400;
+    }
+    .content-error {
+        font-family: 'Gloria Hallelujah', cursive;
+        font-size:2em;
+        font-weight: 400;
+    }
+</style>
+<section class="info-c">
+    <div class="error-section">
+        <div class="text-error">Oops!</div>
+        <div class="content-error">An error occurred while processing your request.</div>
+    </div>
+</section>
+<script type="text/javascript">
+    WebFontConfig = {
+        google: { families: ['Frijole::latin', 'Gloria+Hallelujah::latin'] }
+    };
+    (function () {
+        var wf = document.createElement('script');
+        wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+          '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+        wf.type = 'text/javascript';
+        wf.async = 'true';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(wf, s);
+    })(); </script>
+</body>
+</html>
